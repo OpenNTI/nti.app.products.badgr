@@ -1,0 +1,10 @@
+/__init__.pyc
+/acl.pyc
+/authorization.pyc
+/client.pyc
+/client_models.pyc
+/decorators.pyc
+/integration.pyc
+/interfaces.pyc
+/model.pyc
+/views.pyc
