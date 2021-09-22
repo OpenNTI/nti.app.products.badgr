@@ -15,6 +15,7 @@ from zope import interface
 from zope.annotation.interfaces import IAttributeAnnotatable
 
 from nti.app.products.integration.interfaces import IIntegration
+from nti.app.products.integration.interfaces import IOAuthAuthorizedIntegration
 
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ILastModified
@@ -91,22 +92,17 @@ class IBadgrOrganization(IShouldHaveTraversablePath, IAttributeAnnotatable):
                                   required=False)
 
 
-class IBadgrIntegration(IIntegration, ICreated, ILastModified, IShouldHaveTraversablePath):
+class IBadgrIntegration(IIntegration):
     """
     Badgr integration
     """
 
-    authorization_token = ValidTextLine(title=u'authorization token',
-                                        description=u"Badgr integration authorization token",
-                                        min_length=1,
-                                        required=True)
 
-    base_url = HTTPURL(title=u"Base API url",
-                       required=False)
-
-    organization = Object(IBadgrOrganization,
-                          title=u'The Badgr organization tied to this integration.',
-                          required=False)
+class IBadgrAuthorizedIntegration(IOAuthAuthorizedIntegration,
+                                  IBadgrIntegration):
+    """
+    An :class:`IOAuthAuthorizedIntegration` for badgr.
+    """
 
 
 class IBadgrClient(interface.Interface):

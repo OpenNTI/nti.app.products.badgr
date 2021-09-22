@@ -2,6 +2,7 @@
 <configure	xmlns="http://namespaces.zope.org/zope"
 			xmlns:i18n="http://namespaces.zope.org/i18n"
 			xmlns:ext="http://nextthought.com/ntp/ext"
+            xmlns:oauth="http://nextthought.com/ntp/oauth"			
 			xmlns:zcml="http://namespaces.zope.org/zcml">
 
 	<include package="zope.component" file="meta.zcml" />
@@ -36,9 +37,10 @@
                          .interfaces.IAwardedBadgrBadge
                          .interfaces.IBadgrOrganization
                          .interfaces.IBadgrBadgeCollection
+                         .interfaces.IBadgrAuthorizedIntegration
                          .interfaces.IAwardedBadgrBadgeCollection
                          .interfaces.IBadgrOrganizationCollection"
-        modules=".model .client_models" />
+        modules=".integration .client_models" />
 
     <!-- Integration -->
     <adapter factory=".client.integration_to_client" />
@@ -111,4 +113,27 @@
     <adapter factory=".client_models._badgr_organization_collection_factory"
              for="dict"
              provides=".interfaces.IBadgrOrganizationCollection" />
+             
+    <adapter factory=".integration._auth_badgr_factory"
+             for="dict"
+             provides=".interfaces.IBadgrAuthorizedIntegration" />
+             
+    <!-- Badgr auth -->
+    <include package="nti.common" file="meta.zcml" />
+
+    <!-- localhost -->
+    <configure zcml:condition="have devmode">
+        <oauth:registerOAuthKeys
+                apiKey="FzsOeN9hWeAma03kldZAQCCNzIGW92Sf"
+                secretKey="DIEDGu1SS2aqR7J7"
+                id="badgr" />
+    </configure>
+
+    <!-- .nextthought.com -->
+    <configure zcml:condition="not-have devmode">
+        <oauth:registerOAuthKeys
+                apiKey="tb4uxiDMyRDgBa5AfJvKRgz3yqW4i076"
+                secretKey="WIf265eR7PlPUAIS"
+                id="badgr" />
+    </configure>
 </configure>

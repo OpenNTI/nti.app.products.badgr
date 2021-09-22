@@ -113,13 +113,13 @@ class BadgrIntegrationUpdateMixin(object):
              name=ENABLE_BADGR_VIEW,
              permission=ACT_BADGR)
 class EnableBadgrIntegrationView(AbstractAuthenticatedView,
-                                   ModeledContentUploadRequestUtilsMixin,
-                                   BadgrIntegrationUpdateMixin):
+                                 ModeledContentUploadRequestUtilsMixin,
+                                 BadgrIntegrationUpdateMixin):
     """
     Enable the badgr integration
     """
 
-    DEFAULT_FACTORY_MIMETYPE = "application/vnd.nextthought.site.badgrintegration"
+    DEFAULT_FACTORY_MIMETYPE = "application/vnd.nextthought.badgrintegration"
 
     def readInput(self, value=None):
         if self.request.body:
@@ -150,7 +150,7 @@ class EnableBadgrIntegrationView(AbstractAuthenticatedView,
              permission=ACT_BADGR,
              renderer='rest')
 class BadgrIntegrationPutView(UGDPutView,
-                                BadgrIntegrationUpdateMixin):
+                              BadgrIntegrationUpdateMixin):
 
     def updateContentObject(self, obj, externalValue):
         super(BadgrIntegrationPutView, self).updateContentObject(obj, externalValue)

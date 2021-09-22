@@ -13,3 +13,5 @@ ENABLE_BADGR_VIEW = 'EnableBadgr'
 BADGR_INTEGRATION_NAME = u'badgr'
 
 NT_EVIDENCE_NTIID_ID = u'NextThoughtEvidenceNTIID'
+
+REL_AUTH_BADGR = 'authorize.badgr'
