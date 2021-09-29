@@ -5,6 +5,8 @@ https://badgr.org/app-developers/#oauth2
 
 https://api.badgr.io/docs/v2
 
+http://localhost:8082/dataserver2/users/josh.zuech@nextthought.com/Integration/Integrations/badgr/@@authorize.badgr
+
 Current state
 * IPython breakpoints in the code
 * oauth2 not fully working 
@@ -22,8 +24,17 @@ Setup info
 ** see webinar methodology
 ** tokens stored in redis
 * auth_integration adapts to client to make API calls
+* hooks to award badges (what if have credly and badgr in course collection)
 * assuming one issuer (org in credly) per authorized account
 * plan was to only have one badge integration (badgr or credly) to simplify things
+
+awarded badges for user (distinct per impl)
+- credly
+- badgr
+
+tie badges to course (distinct per api) (course API supports either)
+- credly
+- badgr
 
 badgr
 - passwords
