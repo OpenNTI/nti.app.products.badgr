@@ -1,0 +1,35 @@
+[
+  {
+    "entityType": "Assertion",
+    "entityId": "string",
+    "openBadgeId": "string",
+    "createdAt": "string",
+    "createdBy": "string",
+    "badgeclass": "string",
+    "badgeclassOpenBadgeId": "string",
+    "issuer": "string",
+    "issuerOpenBadgeId": "string",
+    "image": "string",
+    "recipient": {
+      "identity": "string",
+      "hashed": true,
+      "type": "email",
+      "plaintextIdentity": "string",
+      "salt": "string"
+    },
+    "issuedOn": "string",
+    "narrative": "string",
+    "evidence": [
+      {
+        "url": "string",
+        "narrative": "string"
+      }
+    ],
+    "revoked": true,
+    "revocationReason": "string",
+    "acceptance": "string",
+    "expires": "string",
+    "extensions": "string",
+    "badgeclassName": "string"
+  }
+]

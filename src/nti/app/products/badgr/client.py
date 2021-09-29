@@ -19,6 +19,8 @@ from datetime import datetime
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.component.hooks import getSite
 
 from zope.intid.interfaces import IIntIds
@@ -33,6 +35,7 @@ from nti.app.products.badgr.interfaces import IBadgrIntegration
 from nti.app.products.badgr.interfaces import IAwardedBadgrBadge
 from nti.app.products.badgr.interfaces import IBadgrOrganization
 from nti.app.products.badgr.interfaces import IBadgrBadgeCollection
+from nti.app.products.badgr.interfaces import IBadgrAuthorizedIntegration
 from nti.app.products.badgr.interfaces import IBadgrInitializationUtility
 from nti.app.products.badgr.interfaces import InvalidBadgrIntegrationError
 from nti.app.products.badgr.interfaces import IAwardedBadgrBadgeCollection
@@ -50,18 +53,14 @@ from nti.site.localutility import install_utility
 logger = __import__('logging').getLogger(__name__)
 
 
-@component.adapter(IBadgrIntegration)
+@component.adapter(IBadgrAuthorizedIntegration)
 @interface.implementer(IBadgrClient)
 def integration_to_client(integration):
-    if integration.authorization_token:
-        return BadgrClient(integration)
+    return BadgrClient(integration)
 
 
 @interface.implementer(IBadgrInitializationUtility)
 class _BadgrInitializationUtility(object):
-
-    BASE_URLS = ('https://api.credly.com/v1',
-                 'https://sandbox-api.credly.com/v1')
 
     @property
     def site(self):
@@ -80,48 +79,36 @@ class _BadgrInitializationUtility(object):
         obj.__name__ = BADGR_INTEGRATION_NAME
         install_utility(obj,
                         utility_name=obj.__name__,
-                        provided=IBadgrIntegration,
+                        provided=IBadgrAuthorizedIntegration,
                         local_site_manager=self.site_manager)
         return obj
 
-    def _get_organizations(self, integration):
+    def _get_issuers(self, integration):
         client = IBadgrClient(integration)
-        return client.get_organizations()
+        return client.get_issuers()
 
-    def set_organization(self, integration):
+    def set_issuer(self, integration):
         """
-        Fetch organizations, which should be a single entry.
+        Fetch issuers, which should be a single entry.
 
         Raises :class:`InvalidBadgrIntegrationError` if token is invalid.
         """
-        organizations = self._get_organizations(integration)
-        organizations = organizations.organizations
-        if len(organizations) == 1:
-            # Just one organization - set and use
-            integration.organization = organizations[0]
-            integration.organization.__parent__ = integration
+        issuers = self._get_issuers(integration)
+        issuers = issuers.issuers
+        if len(issuers) == 1:
+            # Just one issuer - set and use
+            integration.issuer = issuers[0]
+            integration.issuer.__parent__ = integration
             self._register_integration(integration)
         else:
-            logger.warn("Multiple organizations tied to auth token (%s) (%s)",
-                        integration.authorization_token,
-                        organizations)
+            logger.warn("Multiple issuers tied to auth token (%s) (%s)",
+                        integration.access_token,
+                        issuers)
         return integration
 
     def initialize(self, integration):
-        """
-        We have two possible API urls; try both. If successful, integration
-        will have url and organization stored on it for future API calls.
-        """
-        invalid_exception = None
-        for base_url in self.BASE_URLS:
-            integration.base_url = base_url
-            try:
-                self.set_organization(integration)
-            except InvalidBadgrIntegrationError as exc:
-                invalid_exception = exc
-            else:
-                return integration
-        raise invalid_exception
+        self.set_issuer(integration)
+        return integration
 
 
 @interface.implementer(IBadgrClient)
@@ -130,44 +117,53 @@ class BadgrClient(object):
     The client to interact with badgr.
     """
 
-    ORGANIZATIONS_URL = '/organizations'
-    ORGANIZATIONS_ORG_URL = '/organizations/%s'
-    ORGANIZATION_ALL_BADGES_URL = '/organizations/%s/badge_templates'
-    ORGANIZATION_BADGE_URL = '/organizations/%s/badge_templates/%s'
+    BASE_URL = 'https://api.badgr.io/v2'
+
+    ISSUERS_URL = '/issuers'
+    ISSUERS_ORG_URL = '/issuers/%s'
+    ISSUER_ALL_BADGES_URL = '/issuers/%s/badgeclasses'
+    ORGANIZATION_BADGE_URL = '/badgeclasses/%s'
+    ISSUER_ASSERTIONS = '/issuers/%s/assertions'
 
     BADGE_URL = '/organizations/%s/badges'
 
-    def __init__(self, integration):
-        self.authorization_token = integration.authorization_token
-        # The authorization token is effectively the username; encode
-        # with an empty password
-        self.b64_token = b64encode('%s:' % self.authorization_token)
-        org_id = None
-        if integration.organization:
-            org_id = integration.organization.organization_id
-        self.organization_id = org_id
-        self.base_url = integration.base_url
+    def __init__(self, authorized_integration):
+        self.authorized_integration = authorized_integration
+
+    @Lazy
+    def _access_token(self):
+        return self.authorized_integration.access_token
+
+    def _update_access_token(self):
+        result = self.authorized_integration.update_tokens(self._access_token)
+        self._access_token = result
 
     def _make_call(self, url, post_data=None, params=None, delete=False, acceptable_return_codes=None):
         if not acceptable_return_codes:
-            acceptable_return_codes = (200,201)
-        url = '%s%s' % (self.base_url, url)
+            acceptable_return_codes = (200, 201)
+        url = '%s%s' % (self.BASE_URL, url)
         logger.debug('badgr badges call (url=%s) (params=%s) (post_data=%s)',
                      url, params, post_data)
 
-        access_header = 'Basic %s' % self.b64_token
-        if post_data:
-            response = requests.post(url,
+        def _do_make_call():
+            access_header = 'Bearer %s' % self._access_token
+            if post_data:
+                return requests.post(url,
                                      json=post_data,
                                      headers={'Authorization': access_header,
                                               'Accept': 'application/json'})
-        elif delete:
-            response = requests.delete(url,
+            elif delete:
+                return requests.delete(url,
                                        headers={'Authorization': access_header})
-        else:
-            response = requests.get(url,
-                                    params=params,
+            else:
+                return requests.get(url,
                                     headers={'Authorization': access_header})
+        response = _do_make_call()
+        if response.status_code in (401, 403):
+            # Ok, expired token, refresh and try again.
+            self._update_access_token()
+            response = _do_make_call()
+        
         if response.status_code not in acceptable_return_codes:
             if response.status_code == 422:
                 try:

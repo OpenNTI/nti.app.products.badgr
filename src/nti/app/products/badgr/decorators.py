@@ -16,7 +16,7 @@ from zope.component.hooks import getSite
 from zope.container.interfaces import ILocation
 
 from nti.app.products.badgr import BADGES
-from nti.app.products.badgr import ENABLE_BADGR_VIEW
+from nti.app.products.badgr import REL_AUTH_BADGR
 from nti.app.products.badgr import VIEW_AWARDED_BADGES
 
 from nti.app.products.badgr.authorization import ACT_BADGR
@@ -64,15 +64,14 @@ class _BadgrEnableIntegrationDecorator(AbstractAuthenticatedRequestAwareDecorato
     def _predicate(self, context, unused_result):
         current_site = getSite()
         return super(_BadgrEnableIntegrationDecorator, self)._predicate(context, unused_result) \
-           and has_permission(ACT_BADGR, current_site, self.request) \
-           and not context.authorization_token
+           and has_permission(ACT_BADGR, current_site, self.request)
 
     def _do_decorate_external(self, unused_context, result):
         links = result.setdefault(LINKS, [])
         link_context = getSite()
         link = Link(link_context,
-                    elements=("@@" + ENABLE_BADGR_VIEW,),
-                    rel='enable')
+                    elements=("@@" + REL_AUTH_BADGR,),
+                    rel=REL_AUTH_BADGR)
         links.append(located_link(link_context, link))
 
 
@@ -80,20 +79,7 @@ class _BadgrEnableIntegrationDecorator(AbstractAuthenticatedRequestAwareDecorato
 @interface.implementer(IExternalMappingDecorator)
 class _BadgrIntegrationDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    def _obscure_authorization_token(self, token):
-        """
-        Return first 3/4 of token as astericks.
-        """
-        token_len = len(token)
-        segment_len = int(token_len / 4)
-        prefix_len = segment_len * 3
-        prefix = '*' * prefix_len
-        suffix = token[prefix_len:]
-        return '%s%s' % (prefix, suffix)
-
     def _do_decorate_external(self, context, result):
-        if context.authorization_token:
-            result['authorization_token'] = self._obscure_authorization_token(context.authorization_token)
         links = result.setdefault(LINKS, [])
         if has_permission(ACT_BADGR, context, self.request):
             link = Link(context,

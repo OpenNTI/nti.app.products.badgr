@@ -1,0 +1,34 @@
+[
+  {
+    "entityType": "BadgeClass",
+    "entityId": "badgeid1234",
+    "openBadgeId": "string",
+    "createdAt": "string",
+    "createdBy": "string",
+    "issuer": "string",
+    "issuerOpenBadgeId": "string",
+    "name": "string",
+    "image": "string",
+    "description": "string",
+    "achievementType": "Achievement",
+    "criteriaUrl": "string",
+    "criteriaNarrative": "string",
+    "alignments": [
+      {
+        "targetName": "string",
+        "targetUrl": "string",
+        "targetDescription": "string",
+        "targetFramework": "string",
+        "targetCode": "string"
+      }
+    ],
+    "tags": [
+      "string"
+    ],
+    "expires": {
+      "amount": "string",
+      "duration": "string"
+    },
+    "extensions": "string"
+  }
+]

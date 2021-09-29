@@ -1,0 +1,25 @@
+[
+  {
+    "entityType": "Issuer",
+    "entityId": "123456",
+    "openBadgeId": "string",
+    "createdAt": "string",
+    "createdBy": "string",
+    "name": "string",
+    "image": "string",
+    "email": "user@example.com",
+    "description": "string",
+    "url": "string",
+    "staff": [
+      {
+        "entityType": "string",
+        "entityId": "string",
+        "userProfile": "string",
+        "user": "string",
+        "role": "staff"
+      }
+    ],
+    "extensions": "string",
+    "badgrDomain": "string"
+  }
+]

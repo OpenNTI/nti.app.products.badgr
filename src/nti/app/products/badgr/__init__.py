@@ -6,7 +6,9 @@ MessageFactory = zope.i18nmessageid.MessageFactory(__name__)
 
 BADGES = 'badges'
 
-VIEW_AWARDED_BADGES = 'awarded_badges'
+REL_AUTH_BADGR = 'authorize.badgr'
+
+VIEW_AWARDED_BADGES = 'badgr_awarded_badges'
 
 ENABLE_BADGR_VIEW = 'EnableBadgr'
 

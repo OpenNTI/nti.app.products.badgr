@@ -15,6 +15,7 @@ from zope import interface
 from zope.annotation.interfaces import IAttributeAnnotatable
 
 from nti.app.products.integration.interfaces import IIntegration
+from nti.app.products.integration.interfaces import IOAuthAuthorizedIntegration
 
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ILastModified
@@ -36,7 +37,7 @@ class IBadgrInitializationUtility(interface.Interface):
     def initialize(self, integration):
         """
         Handles initializing the :class:`IBadgrIntegration`, which involves finding
-        the base_url and picking an organization.
+        the base_url and picking an issuer.
         """
 
 
@@ -65,64 +66,69 @@ class IBadgrIdEvidence(IBadgrEvidence):
                          required=False)
 
 
-class IBadgrOrganization(IShouldHaveTraversablePath, IAttributeAnnotatable):
-    """
-    An Badgr organization.
-    """
+class IBadgrType(IShouldHaveTraversablePath, IAttributeAnnotatable):
 
-    organization_id = ValidTextLine(title=u'badgr organization id',
-                                    min_length=1,
-                                    required=True)
-
-    name = ValidTextLine(title=u'organization name',
-                         min_length=1,
-                         required=False)
-
-    photo_url = ValidTextLine(title=u'Photo url',
-                              min_length=1,
-                              required=False)
-
-    website_url = ValidTextLine(title=u'Website url',
+    entity_type = ValidTextLine(title=u'badgr type',
                                 min_length=1,
                                 required=False)
-
-    contact_email = ValidTextLine(title=u'Contact email',
+    
+    name = ValidTextLine(title=u'badgr name',
+                         min_length=1,
+                         required=False)
+    
+    open_badge_id = ValidTextLine(title=u'open badge id',
                                   min_length=1,
                                   required=False)
 
+    entity_id = ValidTextLine(title=u'entity_id',
+                              min_length=1,
+                              required=True)
 
-class IBadgrIntegration(IIntegration, ICreated, ILastModified, IShouldHaveTraversablePath):
+    image_string = ValidTextLine(title=u'image',
+                                 min_length=1,
+                                 required=False)
+
+class IBadgrIssuer(IBadgrType):
+    """
+    An Badgr issuer.
+    """
+
+    url = ValidTextLine(title=u'Website url',
+                        min_length=1,
+                        required=False)
+
+    email = ValidTextLine(title=u'Contact email',
+                          min_length=1,
+                          required=False)
+
+
+class IBadgrIntegration(IIntegration):
     """
     Badgr integration
     """
 
-    authorization_token = ValidTextLine(title=u'authorization token',
-                                        description=u"Badgr integration authorization token",
-                                        min_length=1,
-                                        required=True)
 
-    base_url = HTTPURL(title=u"Base API url",
-                       required=False)
-
-    organization = Object(IBadgrOrganization,
-                          title=u'The Badgr organization tied to this integration.',
-                          required=False)
+class IBadgrAuthorizedIntegration(IOAuthAuthorizedIntegration,
+                                  IBadgrIntegration):
+    """
+    An :class:`IOAuthAuthorizedIntegration` for badgr.
+    """
 
 
 class IBadgrClient(interface.Interface):
     """
     An Badgr client to fetch Badgr information. The client is tied to a
-    specific authorization_token. All badge calls must have an organization id.
+    specific access_token. All badge calls must have an issuer id.
     """
 
-    def get_organization(organization_id):
+    def get_issuers(issuer_id):
         """
-        Get the :class:`IBadgrOrganization` for this organization id.
+        Get the :class:`IBadgrIssuer` for this issuer id.
         """
 
-    def get_organizations():
+    def get_issuers():
         """
-        Get all :class:`IBadgrOrganization` objects.
+        Get all :class:`IBadgrIssuer` objects.
         """
 
     def get_badge(badge_template_id):
@@ -157,59 +163,24 @@ class IBadgrClient(interface.Interface):
         """
 
 
-class IBadgrBadge(IShouldHaveTraversablePath, IAttributeAnnotatable):
+class IBadgrBadge(IBadgrType):
     """
     An Badgr badge template.
     """
 
-    organization_id = ValidTextLine(title=u'badgr organization',
-                                    min_length=1,
-                                    required=True)
+    issuer_entity_id = ValidTextLine(title=u'the badge issuer entity_id',
+                                     min_length=1,
+                                     required=True)
 
-    organization_name = ValidTextLine(title=u'badgr organization name',
-                                      min_length=1,
-                                      required=False)
-
-    template_id = ValidText(title=u"Template id",
-                            required=True)
-
-    allow_duplicate_badges = Bool(title=u"Allow duplicate badges",
-                                  description=u'Badge can be awarded to a user multiple times',
-                                  required=True)
-
-    description = ValidTextLine(title=u"Description",
-                                required=False)
-
-    name = ValidTextLine(title=u"Badge name",
-                         required=True)
-
-    state = ValidTextLine(title=u"Badge state",
-                          description=u"State - active, archived, draft",
-                          required=False)
-
-    badges_count = Int(title=u"Awarded badges count",
-                       required=False)
-
-    public = Bool(title=u"Badge is public",
-                  required=True)
-
-    visibility = ValidTextLine(title=u"Badge visibility",
-                               required=True)
-
-    image_url = HTTPURL(title=u"Badge image url",
-                        required=False)
-
-    badge_url = HTTPURL(title=u"Badge url",
-                        required=False)
+    issuer_open_badge_id = ValidTextLine(title=u'issuer open badge id',
+                                         min_length=1,
+                                         required=False)
 
     created_at = ValidDatetime(title=u"Badge created date",
                                required=True)
 
-    updated_at = ValidDatetime(title=u"Badge last modified",
-                               required=True)
 
-
-class IAwardedBadgrBadge(IShouldHaveTraversablePath, IAttributeAnnotatable):
+class IAwardedBadgrBadge(IBadgrType):
 
     badge_template = Object(IBadgrBadge,
                             title=u'The Badgr badge template.',
@@ -251,7 +222,6 @@ class IAwardedBadgrBadge(IShouldHaveTraversablePath, IAttributeAnnotatable):
                            min_length=0)
 
 
-
 class IBadgePageMetadata(interface.Interface):
     """
     Badge page metadata.
@@ -286,12 +256,12 @@ class IAwardedBadgrBadgeCollection(IBadgePageMetadata):
                         min_length=0)
 
 
-class IBadgrOrganizationCollection(interface.Interface):
+class IBadgrIssuerCollection(interface.Interface):
 
-    organizations = ListOrTuple(Object(IBadgrOrganization),
-                                title=u"Badgr organizations",
-                                required=True,
-                                min_length=0)
+    issuers = ListOrTuple(Object(IBadgrIssuer),
+                          title=u"Badgr issuers",
+                          required=True,
+                          min_length=0)
 
 
 class BadgrClientError(Exception):
